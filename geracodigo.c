@@ -35,6 +35,8 @@ funcp geraCodigo (FILE *arquivo_entrada, unsigned char codigo[]){
 
                 if (fscanf(arquivo_entrada, "%d %c= %c%d", &idx0, &op, &var1, &idx1) != 4)
                     error("comando invalido", contaLinha);
+
+                    
                 printf("%d %c%d %c= %c%d\n", contaLinha, var0, idx0, op, var1, idx1);
                 break;
             }
@@ -58,6 +60,8 @@ funcp geraCodigo (FILE *arquivo_entrada, unsigned char codigo[]){
         contaLinha ++;
         fscanf(arquivo_entrada, " ");
     }
+
+    return (funcp) codigo;x 
 }
 
 static void error (const char *msg, int line){
