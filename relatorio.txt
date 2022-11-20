@@ -1,0 +1,7 @@
+Relatório do Segundo Trabalho de Software Básico - INF1018 - 20222.2
+
+Alunos: 
+Leo Land Bairos Lomardo - 2020201
+Lucas Daibes Rachid de Lucena - 2010796
+
+Objetivo do trabalho: criar um compilador para a linguagem SB, utilizando a linguagem C.
