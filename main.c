@@ -11,12 +11,12 @@ int main(int argc, char *argv[]) {
     perror("Falha na abertura do arquivo fonte");
     exit(1);
   }
-  /* compila a função SB */
+  /* compila a funï¿½ï¿½o SB */
   funcaoSB = geraCodigo(myfp, codigo);
   fclose(myfp);
 
-  /* chama a função */
-  res = (*funcaoSB)(myfp, codigo);  /* passando parâmetro apropriados */
+  /* chama a funï¿½ï¿½o */
+  res = (*funcaoSB)(myfp, codigo);  /* passando parï¿½metro apropriados */
   
   return 0;
 }
