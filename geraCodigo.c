@@ -64,7 +64,7 @@ funcp geraCodigo (FILE *arquivo_entrada, unsigned char codigo[]){
         fscanf(arquivo_entrada, " ");
     }
 
-    return (funcp) codigo;x 
+    return (funcp) codigo;
 }
 
 static void error (const char *msg, int line){
