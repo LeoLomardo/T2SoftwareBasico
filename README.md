@@ -40,9 +40,9 @@ o resultado da operação `v1 * p1` será armazenado na variável local v1 e o v
 
 A instrução de desvio condicional tem a forma `'if' varp n1 n2` onde varp é uma variável local ou um parâmetro, e n1 e n2 são números de linhas no código fonte. A semântica dessa instrução é a seguinte:
 
-se o valor da variável local ou parâmetro é menor que 0, será executado um desvio para a instrução que está na linha n1;  
-se o valor da variável local ou parâmetro é igual a 0, será executado um desvio para a instrução que está na linha n2;  
-se o valor da variável local ou parâmetro é maior que 0, não há desvio e a execução segue normalmente para a instrução da linha seguinte.  
+- se o valor da variável local ou parâmetro é menor que 0, será executado um desvio para a instrução que está na linha n1;  
+- se o valor da variável local ou parâmetro é igual a 0, será executado um desvio para a instrução que está na linha n2;  
+- se o valor da variável local ou parâmetro é maior que 0, não há desvio e a execução segue normalmente para a instrução da linha seguinte.  
 
 A instrução de desvio incondicional tem a forma 'go' n onde n é o número da linha no código fonte para onde o controle deverá ser desviado.
 
