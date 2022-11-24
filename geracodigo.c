@@ -19,7 +19,7 @@ static unsigned char finalCod[TAMANHO_FINAL] = {0xC9, 0xC3};
 
 struct If{																		
     int desvioIfJl[20];
-    int desvioIfje[20];																	/* estruturas auxiliares para preencher os espaços dos jumps*/
+    int desvioIfje[20];																	/* estruturas auxiliares para preencher os espaï¿½os dos jumps*/
     int linhaIfjl;/*contador*/  
     int linhaIfje;/*contador*/ 
 };
@@ -121,7 +121,7 @@ funcp geraCodigo(FILE *arquivo_entrada, unsigned char codigo[]){
 
     while ((c = fgetc(arquivo_entrada)) != EOF){                                        
 
-        endereco[linha]=(long)(&codigo[posicaoVet]); /* salvando os endereços das linhas no vetor*/
+        endereco[linha]=(long)(&codigo[posicaoVet]); /* salvando os endereï¿½os das linhas no vetor*/
         linha++;
 
         switch (c){
@@ -625,14 +625,14 @@ funcp geraCodigo(FILE *arquivo_entrada, unsigned char codigo[]){
         fscanf(arquivo_entrada, " ");
     }
    
-   /*preenchendo os espaços (00) */
+   /*preenchendo os espaï¿½os (00) */
   
         auxDesv = 0;    
         desvio.linhaGo = 0;
         while(codigo[posicaoVet]!=0xc9)/*percorre o vetor ate o fim*/
         {
             if(codigo[posicaoVet]==0xe9){/*ate achar a instrucao do go*/
-                auxDesv+=5;/* anda 5 p pegar o endereço da proxima instrucao */
+                auxDesv+=5;/* anda 5 p pegar o endereï¿½o da proxima instrucao */
                 num = endereco[desvio.desvioGo[desvio.linhaGo]-1]-(long)&codigo[posicaoVet];/* calculando o deslocamento */
                 auxDesv-=4; 
                 desvio.linhaGo++;              
@@ -648,7 +648,7 @@ funcp geraCodigo(FILE *arquivo_entrada, unsigned char codigo[]){
         desvio2.linhaIfje=0; desvio2.linhaIfjl=0;
         while(codigo[posicaoVet]!=0xc9){
             if(codigo[posicaoVet]==0x8c){/* ou ate achar a instrucao do if*/
-                auxDesv+=5;/* anda 5 p pegar o endereço da proxima instrucao */
+                auxDesv+=5;/* anda 5 p pegar o endereï¿½o da proxima instrucao */
                 num2=endereco[desvio2.desvioIfJl[desvio2.linhaIfjl]-1]-(long)&codigo[posicaoVet];/* calculando o deslocamento */
                 auxDesv-=4;/* volta 4 para preencher */
 
@@ -660,7 +660,7 @@ funcp geraCodigo(FILE *arquivo_entrada, unsigned char codigo[]){
                 desvio2.linhaIfjl++;
             }
             if(codigo[posicaoVet]==0x84){
-                auxDesv+=5;/* anda 5 p pegar o endereço da proxima instrucao */
+                auxDesv+=5;/* anda 5 p pegar o endereï¿½o da proxima instrucao */
                 num2=endereco[desvio2.desvioIfje[desvio2.linhaIfje]-1]-(long)&codigo[posicaoVet];/* calculando o deslocamento */
                 auxDesv-=4;/* volta 4 para preencher */
                while(a<4){/* preenche o vetor */
