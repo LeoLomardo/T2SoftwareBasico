@@ -1,22 +1,19 @@
 #include "geracodigo.h"
 
-int main(int argc, char *argv[]) {
-  FILE *myfp;
-  unsigned char codigo[1];
-  funcp funcaoSB;
+int main(int argc, char *argv[]){
+  unsigned char codigo[9999];
   int res;
 
-  /* Abre o arquivo fonte */
-  if ((myfp = fopen("programa", "r")) == NULL) {
-    perror("Falha na abertura do arquivo fonte");
+  FILE *arquivo = fopen("teste1.txt", "r");
+  if(!arquivo){
+    printf("nem abrir essa porra abre");
     exit(1);
   }
-  /* compila a fun��o SB */
-  funcaoSB = geraCodigo(myfp, codigo);
-  fclose(myfp);
+  funcp funcaoSB;
+  funcaoSB = geraCodigo(arquivo, codigo);
+  res = (*funcaoSB)(3);
+	printf("%d", res);
 
-  /* chama a fun��o */
-  res = (*funcaoSB)(myfp, codigo);  /* passando par�metro apropriados */
-  
+  fclose(arquivo);
   return 0;
 }
