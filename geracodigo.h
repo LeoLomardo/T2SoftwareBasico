@@ -3,7 +3,7 @@
 #include<string.h>
 #include<stdlib.h>
 
-typedef int (*funcp) (int x);
+typedef int (*funcp) ();
 int escreverVet(unsigned char *codigo, int posicaoVet, unsigned char novoCod[], int tamanhoAdicional);
 int posicaoVariavel(unsigned char *codigo, int posicaoVet, int val );
 funcp geracodigo(FILE *f, unsigned char *codigo);
