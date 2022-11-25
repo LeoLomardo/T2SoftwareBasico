@@ -13,8 +13,8 @@ int main(int argc, char *argv[]){
   funcp funcLBS;
   int res;
   
-  funcLBS  = geraCodigo(arquivo, codigo);
-  
+  funcLBS  = geracodigo(arquivo, codigo);
+
   fclose(arquivo);
   return 0;
 }

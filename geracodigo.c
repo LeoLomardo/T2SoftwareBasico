@@ -3,7 +3,7 @@
 #include<stdlib.h>
 #include "geracodigo.h"
 
-#define TAMANHO_INICIO 11
+#define TAMANHO_INICIO 12
 #define TAMANHO_DESVIO_CON 12
 #define TAMANHO_OPERACAO 2
 #define TAMANHO_DESVIO_INCON 5
@@ -85,24 +85,25 @@ int operacao(unsigned char *codigo, int posicaoVet, char var0, int idx0){
 
 int escreverVet(unsigned char *codigo, int posicaoVet, unsigned char novoCod[], int tamanhoAdicional){
     int retorno = 0;
-    for(int i = 0; i < tamanhoAdicional; posicaoVet++){
-        codigo[posicaoVet+i] = novoCod[i];
+    for(int i = 0; i <= tamanhoAdicional; i++){
+        codigo[posicaoVet +i] = novoCod[i];
     }
     retorno = posicaoVet + tamanhoAdicional;
     return retorno;
 }
 
 
-funcp geraCodigo(FILE *arquivo_entrada, unsigned char codigo[]){	
+funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){	
     funcp cod;
     int posicaoVet = 0;
-    int line = 1;
+    int line = 0;
     int auxFor = 0;
     int c;
     unsigned int auxDesv = 0;
-    int a=0;
-
-    int num,num2,linha;/*contador endereco*/
+    int a=0;/*
+gcc  main.c geracodigo.c -g
+gdb ./a.out*/
+    int num,num2;/*contador endereco*/
     unsigned char *pnum=(unsigned char*)&num;
     unsigned char *pnum2=(unsigned char*)&num2;
     long int endereco[20];
@@ -113,7 +114,7 @@ funcp geraCodigo(FILE *arquivo_entrada, unsigned char codigo[]){
     desvio.linhaGo=0;
     desvio2.linhaIfjl=0;
     desvio2.linhaIfje=0;
-    linha=0;
+
 
     //inicio pilha
   
@@ -616,8 +617,7 @@ funcp geraCodigo(FILE *arquivo_entrada, unsigned char codigo[]){
   
         auxDesv = 0;    
         desvio.linhaGo = 0;
-        while(codigo[posicaoVet]!=0xc9)/*percorre o vetor ate o fim*/
-        {
+        while(codigo[posicaoVet]!=0xc9){
             if(codigo[posicaoVet]==0xe9){/*ate achar a instrucao do go*/
                 auxDesv+=5;/* anda 5 p pegar o endere�o da proxima instrucao */
                 num = endereco[desvio.desvioGo[desvio.linhaGo]-1]-(long)&codigo[posicaoVet];/* calculando o deslocamento */
