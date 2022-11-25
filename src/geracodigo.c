@@ -1,15 +1,22 @@
+#include <stdio.h>
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
 #include "geracodigo.h"
 
-#define TAMANHO_INICIO 12
+int escreverVet(unsigned char *codigo, int posicaoVet, unsigned char novoCod[], int tamanhoAdicional);
+int posicaoVariavel(unsigned char *codigo, int posicaoVet, int val );
+funcp geracodigo(FILE *f, unsigned char *codigo);
+int operacao(unsigned char *codigo, int posicaoVet, char var0, int idx0);
+static void error (const char *msg, int line);
+
+#define TAMANHO_INICIO 8
 #define TAMANHO_DESVIO_CON 12
 #define TAMANHO_OPERACAO 2
 #define TAMANHO_DESVIO_INCON 5
 #define TAMANHO_FINAL 2
 
-static unsigned char inicioCod[TAMANHO_INICIO] = {0x55, 0x48, 0x89, 0xE5, 0x48, 0x83, 0xEC, 0x10, 0x89, 0x7D, 0xE4};    
+static unsigned char inicioCod[TAMANHO_INICIO] = {0x55, 0x48, 0x89, 0xE5, 0x48, 0x83, 0xEC, 0x10};    
 static unsigned char desvioCon[TAMANHO_DESVIO_CON] = {0x0F, 0x8C, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x84, 0x00, 0x00, 0x00, 0x00};
 static unsigned char operacao_P1[TAMANHO_OPERACAO] = {0xFF, 0x00};
 static unsigned char operacao_P2[TAMANHO_OPERACAO] = {0xFE, 0x00};
@@ -99,8 +106,10 @@ funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){
     int line = 1;
     int auxFor = 0;
     int c;
-    unsigned int auxDesv = 0;
-    int a=0;/*
+    int auxDesv = 0;
+    int a=0;
+    int linha  = 0;
+    /*
 gcc  main.c geracodigo.c -g
 gdb ./a.out*/
     int num,num2;/*contador endereco*/
@@ -119,12 +128,12 @@ gdb ./a.out*/
     //inicio pilha
   
     posicaoVet +=escreverVet(codigo, posicaoVet, inicioCod,TAMANHO_INICIO);
-
+    auxDesv = 8;
 
     while ((c = fgetc(arquivo_entrada)) != EOF){                                        
 
-        endereco[line]=(long)(&codigo[posicaoVet]); /* salvando os endere�os das linhas no vetor*/
-        line++;
+        endereco[linha]=(long)(&codigo[posicaoVet]); /* salvando os endere�os das linhas no vetor*/
+        linha++;
 
         switch (c){
             case 'i': { 																								 /* desvio condicional */
@@ -616,47 +625,49 @@ gdb ./a.out*/
   
         auxDesv = 0;    
         desvio.linhaGo = 0;
-        while(codigo[posicaoVet]!=0xc9){
-            if(codigo[posicaoVet]==0xe9){/*ate achar a instrucao do go*/
+        while(codigo[auxDesv]!=0xc9){
+            if(codigo[auxDesv]==0xe9){/*ate achar a instrucao do go*/
                 auxDesv+=5;/* anda 5 p pegar o endere�o da proxima instrucao */
-                num = endereco[desvio.desvioGo[desvio.linhaGo]-1]-(long)&codigo[posicaoVet];/* calculando o deslocamento */
+                num = endereco[desvio.desvioGo[desvio.linhaGo]-1]-(long)&codigo[auxDesv];/* calculando o deslocamento */
                 auxDesv-=4; 
                 desvio.linhaGo++;              
                 while(a<4){
-                    codigo[posicaoVet]=pnum[a];
-                    posicaoVet++; a++;
+                    codigo[auxDesv]=pnum[a];
+                    auxDesv++; a++;
                 }
                 a=0;
             }
-            posicaoVet++;
+            auxDesv++;
         }   
         auxDesv = 0;
-        desvio2.linhaIfje=0; desvio2.linhaIfjl=0;
-        while(codigo[posicaoVet]!=0xc9){
-            if(codigo[posicaoVet]==0x8c){/* ou ate achar a instrucao do if*/
+        desvio2.linhaIfje=0;
+        desvio2.linhaIfjl=0;
+        while(codigo[auxDesv]!=0xc9){
+            if(codigo[auxDesv]==0x8c){/* ou ate achar a instrucao do if*/
                 auxDesv+=5;/* anda 5 p pegar o endere�o da proxima instrucao */
-                num2=endereco[desvio2.desvioIfJl[desvio2.linhaIfjl]-1]-(long)&codigo[posicaoVet];/* calculando o deslocamento */
+                num2=endereco[desvio2.desvioIfJl[desvio2.linhaIfjl]-1]-(long)&codigo[auxDesv];/* calculando o deslocamento */
                 auxDesv-=4;/* volta 4 para preencher */
 
                while(a<4){
-                    codigo[posicaoVet]=pnum2[a];
-                    posicaoVet++; a++;
+                    codigo[auxDesv]=pnum2[a];
+                    auxDesv++; 
+                    a++;
                 }
                 a=0;
                 desvio2.linhaIfjl++;
             }
-            if(codigo[posicaoVet]==0x84){
+            if(codigo[auxDesv]==0x84){
                 auxDesv+=5;/* anda 5 p pegar o endere�o da proxima instrucao */
-                num2=endereco[desvio2.desvioIfje[desvio2.linhaIfje]-1]-(long)&codigo[posicaoVet];/* calculando o deslocamento */
+                num2=endereco[desvio2.desvioIfje[desvio2.linhaIfje]-1]-(long)&codigo[auxDesv];/* calculando o deslocamento */
                 auxDesv-=4;/* volta 4 para preencher */
                while(a<4){/* preenche o vetor */
-                    codigo[posicaoVet]=pnum2[a];
-                    posicaoVet++; a++;
+                    codigo[auxDesv]=pnum2[a];
+                    auxDesv++; a++;
                 }
                 a=0;
                 desvio2.linhaIfje++;
             } 
-            posicaoVet++;
+            auxDesv++;
         }   
   cod=(funcp)codigo;
   return cod;

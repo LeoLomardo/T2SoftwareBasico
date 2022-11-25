@@ -9,13 +9,14 @@ int main(int argc, char *argv[]){
     exit(1);
   }
 
-  unsigned char codigo[9999];
-  funcp funcLBS;
+  unsigned char codigo[1000];
+  funcp funcSB;
   int res;
   
-  funcLBS  = geracodigo(arquivo, codigo);
-
+  funcSB  = geracodigo(arquivo, codigo);
+  res = (*funcSB)(arquivo, codigo);
+  printf("%d", res);
   fclose(arquivo);
-
+  
   return 0;
 }
