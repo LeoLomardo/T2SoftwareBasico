@@ -16,5 +16,6 @@ int main(int argc, char *argv[]){
   funcLBS  = geracodigo(arquivo, codigo);
 
   fclose(arquivo);
+
   return 0;
 }

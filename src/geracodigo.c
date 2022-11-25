@@ -16,7 +16,7 @@ static unsigned char operacao_P2[TAMANHO_OPERACAO] = {0xFE, 0x00};
 static unsigned char desvioIncon[TAMANHO_DESVIO_INCON] = {0XE9, 0x00, 0x00, 0x00, 0x00};
 static unsigned char finalCod[TAMANHO_FINAL] = {0xC9, 0xC3};
 
-typedef int (*funcp) (int x);
+typedef int (*funcp) ();
 
 struct If{																		
     int desvioIfJl[20];
@@ -52,7 +52,7 @@ int posicaoVariavel(unsigned char *codigo, int posicaoVet, int val){
             retorno = posicaoVet+1;
 
             return retorno;
-    }else{
+    }else if(val == 4){
         codigo[posicaoVet]=0xFC;
             retorno = posicaoVet+1;
 
@@ -96,7 +96,7 @@ int escreverVet(unsigned char *codigo, int posicaoVet, unsigned char novoCod[], 
 funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){	
     funcp cod;
     int posicaoVet = 0;
-    int line = 0;
+    int line = 1;
     int auxFor = 0;
     int c;
     unsigned int auxDesv = 0;
@@ -134,7 +134,6 @@ gdb ./a.out*/
                 if (fscanf(arquivo_entrada, "f %c%d %d %d", &var0, &idx0, &n1, &n2) != 4){
                     error("comando invalido", line);
                 }
-                printf("%d if %c%d %d %d\n", line, var0, idx0, n1, n2);
                 codigo[posicaoVet++] = 0x83;
                 posicaoVet++;
                 posicaoVet += operacao(codigo, posicaoVet, var0,idx0);
