@@ -1,8 +1,7 @@
-#include <stdio.h>
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#include "geracodigo.h"
+#include    <stdio.h>
+#include    <string.h>
+#include    <stdlib.h>
+#include    "geracodigo.h"
 
 int escreverVet(unsigned char *codigo, int posicaoVet, unsigned char novoCod[], int tamanhoAdicional);
 int posicaoVariavel(unsigned char *codigo, int posicaoVet, int val );
@@ -109,6 +108,7 @@ funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){
     int auxDesv = 0;
     int a=0;
     int linha  = 0;
+
     /*
 gcc  main.c geracodigo.c -g
 gdb ./a.out*/
