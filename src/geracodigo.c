@@ -14,11 +14,13 @@ static void error (const char *msg, int line);
 #define TAMANHO_OPERACAO 2
 #define TAMANHO_DESVIO_INCON 5
 #define TAMANHO_FINAL 2
+#define TAMANHO_DESVCOND 6
 
-static unsigned char inicioCod[TAMANHO_INICIO] = {0x55, 0x48, 0x89, 0xE5, 0x48, 0x83, 0xEC, 0x10};    
-static unsigned char desvioCon[TAMANHO_DESVIO_CON] = {0x0F, 0x8C, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x84, 0x00, 0x00, 0x00, 0x00};
+static unsigned char inicioCod[TAMANHO_INICIO] = {0x55, 0x48, 0x89, 0xE5, 0x48, 0x83, 0xEC, 0x20};    
 static unsigned char operacao_P1[TAMANHO_OPERACAO] = {0xFF, 0x00};
 static unsigned char operacao_P2[TAMANHO_OPERACAO] = {0xFE, 0x00};
+static unsigned char desvioCond_P1[TAMANHO_DESVCOND] = {0x0F, 0x8C, 0x00, 0x00, 0x00, 0x00};
+static unsigned char desvioCod_P2[TAMANHO_DESVCOND] = {0x0F, 0x84, 0x00, 0x00, 0x00, 0x00};
 static unsigned char desvioIncon[TAMANHO_DESVIO_INCON] = {0XE9, 0x00, 0x00, 0x00, 0x00};
 static unsigned char finalCod[TAMANHO_FINAL] = {0xC9, 0xC3};
 
@@ -26,13 +28,13 @@ typedef int (*funcp) ();
 
 struct If{																		
     int desvioIfJl[20];
-    int desvioIfje[20];																	/* estruturas auxiliares para preencher os espa�os dos jumps*/
-    int linhaIfjl;/*contador*/  
-    int linhaIfje;/*contador*/ 
+    int desvioIfje[20];																	
+    int linhaIfjl;
+    int linhaIfje;
 };
 struct Go{
     int desvioGo[20];
-    int linhaGo;/*contador*/
+    int linhaGo;
 };
 
 static void error (const char *msg, int line){
@@ -70,9 +72,9 @@ int operacao(unsigned char *codigo, int posicaoVet, char var0, int idx0){
 
     if(var0=='p'){
         if(idx0 ==1){   
-            posicaoVet +=escreverVet(codigo, posicaoVet, operacao_P1, TAMANHO_OPERACAO);					
+            posicaoVet =escreverVet(codigo, posicaoVet, operacao_P1, TAMANHO_OPERACAO);					
         }else if(idx0 ==2){
-            posicaoVet +=escreverVet(codigo, posicaoVet, operacao_P2, TAMANHO_OPERACAO);  
+            posicaoVet =escreverVet(codigo, posicaoVet, operacao_P2, TAMANHO_OPERACAO);  
         }
         return 0;
     }else if(var0=='v'){
@@ -81,9 +83,7 @@ int operacao(unsigned char *codigo, int posicaoVet, char var0, int idx0){
         posicaoVariavel(codigo, posicaoVet, idx0);
         codigo[posicaoVet]=0x00;
         posicaoVet++;
-        retorno = posicaoVet +2;
-        return retorno;
-
+        return posicaoVet;
     }
     return 0;
 }
@@ -91,7 +91,7 @@ int operacao(unsigned char *codigo, int posicaoVet, char var0, int idx0){
 int escreverVet(unsigned char *codigo, int posicaoVet, unsigned char novoCod[], int tamanhoAdicional){
     int retorno = 0;
     for(int i = 0; i <= tamanhoAdicional; i++){
-        codigo[posicaoVet +i] = novoCod[i];
+        codigo[posicaoVet + i] = novoCod[i];
     }
     retorno = posicaoVet + tamanhoAdicional;
     return retorno;
@@ -102,16 +102,12 @@ funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){
     funcp cod;
     int posicaoVet = 0;
     int line = 1;
-    int auxFor = 0;
     int c;
     int auxDesv = 0;
     int a=0;
     int linha  = 0;
 
-    /*
-gcc  main.c geracodigo.c -g
-gdb ./a.out*/
-    int num,num2;/*contador endereco*/
+    int num,num2;
     unsigned char *pnum=(unsigned char*)&num;
     unsigned char *pnum2=(unsigned char*)&num2;
     long int endereco[20];
@@ -123,19 +119,18 @@ gdb ./a.out*/
     desvio2.linhaIfjl=0;
     desvio2.linhaIfje=0;
 
+    posicaoVet = escreverVet(codigo, posicaoVet, inicioCod,TAMANHO_INICIO);
+    // TAMANHO_INICIO;
 
-    //inicio pilha
-  
-    posicaoVet +=escreverVet(codigo, posicaoVet, inicioCod,TAMANHO_INICIO);
     auxDesv = 8;
 
     while ((c = fgetc(arquivo_entrada)) != EOF){                                        
 
-        endereco[linha]=(long)(&codigo[posicaoVet]); /* salvando os endere�os das linhas no vetor*/
+        endereco[linha]=(long)(&codigo[posicaoVet]); 
         linha++;
 
         switch (c){
-            case 'i': { 																								 /* desvio condicional */
+            case 'i': { 																								 
                 char var0;
                 int idx0, n1, n2;
                 
@@ -144,17 +139,17 @@ gdb ./a.out*/
                 }
                 codigo[posicaoVet] = 0x83;
                 posicaoVet++;
-                posicaoVet += operacao(codigo, posicaoVet, var0,idx0);
-                codigo[posicaoVet]=0x0f; posicaoVet++; codigo[posicaoVet]=0x8c; posicaoVet++; /*jl lable*/
-                codigo[posicaoVet]=0x00; posicaoVet++; codigo[posicaoVet]=0x00; posicaoVet++;
-                codigo[posicaoVet]=0x00; posicaoVet++; codigo[posicaoVet]=0x00; posicaoVet++;
-            
+
+                /*posicaoVet += */operacao(codigo, posicaoVet, var0,idx0);
+
+                posicaoVet = escreverVet(codigo, posicaoVet, desvioCond_P1,TAMANHO_DESVCOND);
+                // +=TAMANHO_DESVCOND;
+
                 desvio2.desvioIfJl[desvio2.linhaIfjl]=n1;
                 desvio2.linhaIfjl++;
-                
-                codigo[posicaoVet]=0x0f; posicaoVet++; codigo[posicaoVet]=0x84; posicaoVet++; /*jl lable*/
-                codigo[posicaoVet]=0x00; posicaoVet++; codigo[posicaoVet]=0x00; posicaoVet++;
-                codigo[posicaoVet]=0x00; posicaoVet++; codigo[posicaoVet]=0x00; posicaoVet++;
+
+                posicaoVet = escreverVet(codigo, posicaoVet, desvioCod_P2,TAMANHO_DESVCOND);
+                //posicaoVet +=TAMANHO_DESVCOND;
 
                 desvio2.desvioIfje[desvio2.linhaIfje]=n2;
                 desvio2.linhaIfje++;
@@ -162,19 +157,20 @@ gdb ./a.out*/
                 printf("%d if %c%d %d %d\n", line, var0, idx0, n1, n2);
                 break;
             }
-            case 'g': {																								/* desvio incondicional */
+            case 'g': {																								
                 int n = 0; 
                 if (fscanf(arquivo_entrada, "o %d", &n) != 1){
                     error("Comando invalido", line);
                 }
-                posicaoVet +=escreverVet(codigo, posicaoVet, desvioIncon,TAMANHO_DESVIO_INCON);
-                
+                posicaoVet = escreverVet(codigo, posicaoVet, desvioIncon,TAMANHO_DESVIO_INCON);
+                //posicaoVet +=TAMANHO_DESVIO_INCON;
+
                 desvio.desvioGo[desvio.linhaGo]=n; 
                 desvio.linhaGo++;
                 printf("%d go %d\n", line, n);
                 break;
             }
-            case 'r':{																								/* retorno */
+            case 'r':{																								
                 char var0;
                 int idx0;
                 
@@ -201,24 +197,22 @@ gdb ./a.out*/
                     codigo[posicaoVet]=0x45;
                     posicaoVet++;
                     
-                posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx0);        
+                    posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);        
                 }
                 if(var0=='$'){   
                     codigo[posicaoVet]=0xB8;
                     posicaoVet++;
                     
-                    for(auxFor = 0; auxFor<4; auxFor++){
-                        codigo[posicaoVet] = idx0>>(8*(4-auxFor)) & 0xFF;
-                        posicaoVet++;
-                    }
+                    *((int *)&codigo[posicaoVet])=idx0;
+                    posicaoVet+=4;
                 }
-                    posicaoVet +=escreverVet(codigo, posicaoVet, finalCod,TAMANHO_FINAL);
-                printf("%d ret %c%d\n", line, var0, idx0);
-                break;
-            }//fim do case r
+                    posicaoVet =escreverVet(codigo, posicaoVet, finalCod,TAMANHO_FINAL);
+                    printf("%d ret %c%d\n", line, var0, idx0);
+                    break;
+            }
             
             case 'v':
-            case 'p':{ 																			/* atribuicao */
+            case 'p':{ 																			
                 char var0 = c, var1, op;
                 int idx0, idx1;
                 
@@ -240,7 +234,7 @@ gdb ./a.out*/
                             posicaoVet++;
                         }
                         
-                    }//fim pp
+                    }
                     if((var0=='p' && var1=='v')||(var0=='v' && var1=='p')){
                         if(var0=='v' && var1=='p'){   
                             codigo[posicaoVet]=0x89;
@@ -253,8 +247,8 @@ gdb ./a.out*/
                                 posicaoVet++;
                             }
                             
-                           posicaoVet += posicaoVariavel(codigo, posicaoVet, idx0);          
-                        }//fim vp
+                           posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);          
+                        }
                         if(var0=='p' && var1=='$'){
                             if(idx0 == 1){
                                 codigo[posicaoVet]=0xBF;
@@ -263,10 +257,8 @@ gdb ./a.out*/
                                 codigo[posicaoVet]=0xBE;
                                 posicaoVet++;
                             }
-                            for(auxFor = 0; auxFor<4; auxFor++){
-                                codigo[posicaoVet] = idx1>>(8*(4-auxFor)) & 0xFF;
-                                posicaoVet++;
-                            }
+                            *((int*)&codigo[posicaoVet])=idx1;		
+                            posicaoVet+=4;
                         }
                         if(var0=='p' && var1=='v'){   
                             codigo[posicaoVet]=0x8B;
@@ -280,10 +272,9 @@ gdb ./a.out*/
                             }
                             
 
-                            posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx1);;
+                            posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
                         }
-                    }//fim pv        
-                    //fim p$
+                    }
                     if(var0=='v' && var1=='$'){   
 
                         codigo[posicaoVet]=0xC7;
@@ -291,32 +282,32 @@ gdb ./a.out*/
                         codigo[posicaoVet]=0x45;
                         posicaoVet++;
                         
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx0);
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
 
-                        *((int *)&codigo[posicaoVet])=idx0;/*essa linha coloca o numero em hexa, da forma little endian, no vetor*/
-            posicaoVet+=4;/*soma 4 pois um int tem esse tamanho*/
-                    }//fim v$
+                        *((int *)&codigo[posicaoVet])=idx1;
+                        posicaoVet+=4;
+                    }
                     if(var0=='v'&& var1=='v'){
                         codigo[posicaoVet]=0x44;
                         posicaoVet++;
                         codigo[posicaoVet]=0x8B;
                         posicaoVet++;
                         codigo[posicaoVet]=0x55;
-                        posicaoVet++;/*mov var1 para um registrador*/
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx1);;
+                        posicaoVet++;
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
                         
                         codigo[posicaoVet]=0x44;
                         posicaoVet++;
                         codigo[posicaoVet]=0x89;
                         posicaoVet++;
                         codigo[posicaoVet]=0x55;
-                        posicaoVet++;/*mov %ebx, (%rbp)*/
+                        posicaoVet++;
                         
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx0);		
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);		
                         
-                    }//fim vv 
-                }//fim do :   
-                if(op=='+'){												/* soma */
+                    }
+                }
+                if(op=='+'){												
                     if(var0=='p' && var1=='p'){
                         codigo[posicaoVet]=0x01;
                         posicaoVet++;
@@ -328,7 +319,7 @@ gdb ./a.out*/
                             posicaoVet++;
                         }
                 
-                    }//fim pp
+                    }
                     if((var0=='p' && var1=='v')||(var0=='v' && var1=='p')){
                         if(var0=='v' && var1=='p'){   
                             codigo[posicaoVet]=0x01;
@@ -341,8 +332,8 @@ gdb ./a.out*/
                                 posicaoVet++;
                             }
                             
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx0);             
-                        }//fim vp
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);             
+                        }
                         if(var0=='p' && var1=='v'){   
                             codigo[posicaoVet]=0x03;
                             posicaoVet++;
@@ -353,8 +344,8 @@ gdb ./a.out*/
                                 codigo[posicaoVet]=0x75; 
                                 posicaoVet++;
                             }
-                            posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx1);;
-                        }//fim pv
+                            posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
+                        }
                     }
                     if(var0=='p' && var1=='$'){
                         codigo[posicaoVet]=0x81;
@@ -366,40 +357,39 @@ gdb ./a.out*/
                             codigo[posicaoVet]=0xC6;
                             posicaoVet++;
                         }          	
-                        *((int *)&codigo[posicaoVet])=idx0;/*essa linha coloca o numero em hexa, da forma little endian, no vetor*/
-            posicaoVet+=4;/*soma 4 pois um int tem esse tamanho*/                          
-                    }//fim p$
+                        *((int *)&codigo[posicaoVet])=idx1;
+                        posicaoVet+=4;                     
+                    }
                     if(var0=='v' && var1=='$'){    
                         codigo[posicaoVet]=0x81;
                         posicaoVet++;
                         codigo[posicaoVet]=0x45;
                         posicaoVet++;
                         
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx0);
-                        *((int *)&codigo[posicaoVet])=idx0;/*essa linha coloca o numero em hexa, da forma little endian, no vetor*/
-            posicaoVet+=4;/*soma 4 pois um int tem esse tamanho*/
-                    }//fim v$
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
+                        *((int *)&codigo[posicaoVet])=idx0;
+                        posicaoVet+=4;
+                    }
                     if(var0=='v' && var1=='v'){    
                         codigo[posicaoVet]=0x44;
                         posicaoVet++;
                         codigo[posicaoVet]=0x8b;
                         posicaoVet++;
                         codigo[posicaoVet]=0x55;
-                        posicaoVet++;	/*mov var1 para um registrador*/
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx1);;
+                        posicaoVet++;	
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
     
                         codigo[posicaoVet]=0x44;
                         posicaoVet++;
                         codigo[posicaoVet]=0x01;
                         posicaoVet++;
                         codigo[posicaoVet]=0x55;
-                        posicaoVet++;	/*mov o valor do resultado de volta para a posicao de memoria*/
-                        
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx0);
-                    }//fim vv   
+                        posicaoVet++;	
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
+                    } 
                             
-                }//fim do +
-                if(op=='-'){														/* subtracao */
+                }
+                if(op=='-'){														
                     if(var0=='p' && var1=='p'){
                         codigo[posicaoVet]=0x29;
                         posicaoVet++;
@@ -410,7 +400,7 @@ gdb ./a.out*/
                             codigo[posicaoVet]=0xFE;
                             posicaoVet++;
                         }	
-                    }//fim pp
+                    }
                     if((var0=='p' && var1=='v')||(var0=='v' && var1=='p')){
                         if(var0=='v' && var1=='p'){   
                             codigo[posicaoVet]=0x29;
@@ -422,10 +412,8 @@ gdb ./a.out*/
                                 codigo[posicaoVet]=0x75;
                                 posicaoVet++;
                             }
-        
-                            
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx0);               
-                        }//fim vp
+                            posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);               
+                        }
                         if(var0=='p' && var1=='v'){   
                             codigo[posicaoVet]=0x2b;
                             posicaoVet++;
@@ -436,9 +424,8 @@ gdb ./a.out*/
                                 codigo[posicaoVet]=0x75;
                                 posicaoVet++;
                             }
-                            
-                            posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx1);;
-                        }//fim pv
+                            posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
+                        }
                     }        
                     if(var0=='p' && var1=='$'){
                         codigo[posicaoVet]=0x81;
@@ -451,38 +438,37 @@ gdb ./a.out*/
                                 posicaoVet++;
                             }
                         
-                        *((int *)&codigo[posicaoVet])=idx0;/*essa linha coloca o numero em hexa, da forma little endian, no vetor*/
-                        posicaoVet+=4;/*soma 4 pois um int tem esse tamanho*/              
-                    }//fim p$
+                        *((int *)&codigo[posicaoVet])=idx0;
+                        posicaoVet+=4;       
+                    }
                     if(var0=='v' && var1=='$'){    
                         codigo[posicaoVet]=0x81;
                         posicaoVet++;
                         codigo[posicaoVet]=0x6d;
                         posicaoVet++;
                         
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx0);
-                        *((int *)&codigo[posicaoVet])=idx0;/*essa linha coloca o numero em hexa, da forma little endian, no vetor*/
-                        posicaoVet+=4;/*soma 4 pois um int tem esse tamanho*/
-                    }//fim v$
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
+                        *((int *)&codigo[posicaoVet])=idx0;
+                        posicaoVet+=4;
+                    }
                     if(var0=='v' && var1=='v'){    
                         codigo[posicaoVet]=0x44;
                         posicaoVet++;
                         codigo[posicaoVet]=0x8B;
                         posicaoVet++;
                         codigo[posicaoVet]=0x55;
-                        posicaoVet++;/*mov var1 para um registrador*/
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx1);;
+                        posicaoVet++;
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
             
                         codigo[posicaoVet]=0x44;
                         posicaoVet++;
                         codigo[posicaoVet]=0x29;
                         posicaoVet++;
                         codigo[posicaoVet]=0x55;
-                        posicaoVet++;/*mov o valor do resultado de volta para a posicao de memoria*/
-                        
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx0);
-                    }//fim vv        	
-                }//fim do -
+                        posicaoVet++;
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
+                    }    	
+                }
                 if(op=='*'){
                     if(var0=='p' && var1=='p'){
                     codigo[posicaoVet]=0x0F;
@@ -492,10 +478,10 @@ gdb ./a.out*/
                     if(idx0==1){
                             codigo[posicaoVet]=0xFE;
                             posicaoVet++;
-                        }else if(idx0==2){
-                            codigo[posicaoVet]=0xF7;
-                            posicaoVet++;
-                        }
+                    }else if(idx0==2){
+                        codigo[posicaoVet]=0xF7;
+                        posicaoVet++;
+                    }
                 			
                     }
                     if((var0=='p' && var1=='v')||(var0=='v' && var1=='p')){
@@ -505,9 +491,9 @@ gdb ./a.out*/
                             codigo[posicaoVet]=0x8b;
                             posicaoVet++;
                             codigo[posicaoVet]=0x55;
-                            posicaoVet++; /*mov variavel para registrador*/
+                            posicaoVet++;
                             
-                            posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx0);
+                            posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
                                 
                             codigo[posicaoVet]=0x44;
                             posicaoVet++;
@@ -519,7 +505,7 @@ gdb ./a.out*/
                             if(idx1==1){
                                 codigo[posicaoVet]=0xD7;
                                 posicaoVet++;
-                            }else if(idx0==2){
+                            }else if(idx1==2){
                                 codigo[posicaoVet]=0xD6;
                                 posicaoVet++;
                             }                                 
@@ -529,10 +515,10 @@ gdb ./a.out*/
                             codigo[posicaoVet]=0x89;
                             posicaoVet++;
                             codigo[posicaoVet]=0x55;
-                            posicaoVet++; /*mov o valor do resultado de volta para a posicao de memoria*/
+                            posicaoVet++; 
                             
-                            posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx0);                              
-                        }//fim vp
+                            posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);                              
+                        }
                         if(var0=='p' && var1=='v'){   
                             codigo[posicaoVet]=0x0f;posicaoVet++;
                             codigo[posicaoVet]=0xaf;posicaoVet++;
@@ -543,9 +529,9 @@ gdb ./a.out*/
                                 codigo[posicaoVet]=0x75;
                                 posicaoVet++;
                             }
-                            posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx1);;
+                            posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
                         }
-                    }//fim pv        
+                    }     
                     if(var0=='p' && var1=='$'){
                         codigo[posicaoVet]=0x69;
                         posicaoVet++;
@@ -556,9 +542,9 @@ gdb ./a.out*/
                             codigo[posicaoVet]=0xF6;
                             posicaoVet++;
                         }
-                        *((int *)&codigo[posicaoVet])=idx0;/*essa linha coloca o numero em hexa, da forma little endian, no vetor*/
-            posicaoVet+=4;/*soma 4 pois um int tem esse tamanho*/                
-                    }   //fim p$
+                        *((int *)&codigo[posicaoVet])=idx0;
+            posicaoVet+=4;              
+                    }   
                     if(var0=='v' && var1=='$'){    
                         codigo[posicaoVet]=0x44;
                         posicaoVet++;
@@ -567,7 +553,7 @@ gdb ./a.out*/
                         codigo[posicaoVet]=0x55;
                         posicaoVet++;
                         
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx0);
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
                         
                         codigo[posicaoVet]=0x45;
                         posicaoVet++;
@@ -575,66 +561,63 @@ gdb ./a.out*/
                         posicaoVet++;
                         codigo[posicaoVet]=0xd2;
                         posicaoVet++;
-                        *((int *)&codigo[posicaoVet])=idx0;/*essa linha coloca o numero em hexa, da forma little endian, no vetor*/
-            posicaoVet+=4;/*soma 4 pois um int tem esse tamanho*/
+                        *((int *)&codigo[posicaoVet])=idx0;
+                        posicaoVet+=4;
                                         
                         codigo[posicaoVet]=0x44;
                         posicaoVet++;
                         codigo[posicaoVet]=0x89;
                         posicaoVet++;
                         codigo[posicaoVet]=0x55;
-                        posicaoVet++;/*mov o valor do resultado de volta para a posicao de memoria*/
+                        posicaoVet++;
                         
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx0); 
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0); 
                     }
                     if(var0=='v'&& var1=='v'){
                         codigo[posicaoVet]=0x44;
                         posicaoVet++;
-                        codigo[posicaoVet]=0x8b;
+                        codigo[posicaoVet]=0x8B;
                         posicaoVet++;
                         codigo[posicaoVet]=0x55;
-                        posicaoVet++;/*mov var1 para um registrador*/
+                        posicaoVet++;
                         
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx0);
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
 
                         codigo[posicaoVet]=0x44;
                         posicaoVet++;
-                        codigo[posicaoVet]=0x0f;
+                        codigo[posicaoVet]=0x0F;
                         posicaoVet++;
-                        codigo[posicaoVet]=0xaf;
+                        codigo[posicaoVet]=0xAf;
                         posicaoVet++;
                         codigo[posicaoVet]=0x55;
                         posicaoVet++;
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx1);; 
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
 
                         codigo[posicaoVet]=0x44;
                         posicaoVet++;
                         codigo[posicaoVet]=0x89;
                         posicaoVet++;
                         codigo[posicaoVet]=0x55;
-                        posicaoVet++;/*mov o valor do resultado de volta para a posicao de memoria*/
+                        posicaoVet++;
                         
-                        posicaoVet +=posicaoVariavel(codigo, posicaoVet, idx0);
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
                     } 
-                }//fim da *             
+                }       
                 break;                
             }
             }
         line ++;
         fscanf(arquivo_entrada, " ");
     }
-   
-   /*preenchendo os espa�os (00) */
-  
         auxDesv = 0;    
         desvio.linhaGo = 0;
-        while(codigo[auxDesv]!=0xc9){
-            if(codigo[auxDesv]==0xe9){/*ate achar a instrucao do go*/
-                auxDesv+=5;/* anda 5 p pegar o endere�o da proxima instrucao */
-                num = endereco[desvio.desvioGo[desvio.linhaGo]-1]-(long)&codigo[auxDesv];/* calculando o deslocamento */
+        while(codigo[auxDesv]!= 0xC9){
+            if(codigo[auxDesv] == 0xE9){
+                auxDesv+=5;
+                num = endereco[desvio.desvioGo[desvio.linhaGo]-1]-(long)&codigo[auxDesv];
                 auxDesv-=4; 
                 desvio.linhaGo++;              
-                while(a<4){
+                while(a < 4){
                     codigo[auxDesv]=pnum[a];
                     auxDesv++; a++;
                 }
@@ -646,10 +629,10 @@ gdb ./a.out*/
         desvio2.linhaIfje=0;
         desvio2.linhaIfjl=0;
         while(codigo[auxDesv]!=0xc9){
-            if(codigo[auxDesv]==0x8c){/* ou ate achar a instrucao do if*/
-                auxDesv+=5;/* anda 5 p pegar o endere�o da proxima instrucao */
-                num2=endereco[desvio2.desvioIfJl[desvio2.linhaIfjl]-1]-(long)&codigo[auxDesv];/* calculando o deslocamento */
-                auxDesv-=4;/* volta 4 para preencher */
+            if(codigo[auxDesv]==0x8c){
+                auxDesv+=5;
+                num2=endereco[desvio2.desvioIfJl[desvio2.linhaIfjl]-1]-(long)&codigo[auxDesv];
+                auxDesv-=4;
 
                while(a<4){
                     codigo[auxDesv]=pnum2[a];
@@ -660,10 +643,10 @@ gdb ./a.out*/
                 desvio2.linhaIfjl++;
             }
             if(codigo[auxDesv]==0x84){
-                auxDesv+=5;/* anda 5 p pegar o endere�o da proxima instrucao */
-                num2=endereco[desvio2.desvioIfje[desvio2.linhaIfje]-1]-(long)&codigo[auxDesv];/* calculando o deslocamento */
-                auxDesv-=4;/* volta 4 para preencher */
-               while(a<4){/* preenche o vetor */
+                auxDesv+=5;
+                num2=endereco[desvio2.desvioIfje[desvio2.linhaIfje]-1]-(long)&codigo[auxDesv];
+                auxDesv-=4;
+               while(a<4){
                     codigo[auxDesv]=pnum2[a];
                     auxDesv++; a++;
                 }
@@ -672,8 +655,7 @@ gdb ./a.out*/
             } 
             auxDesv++;
         }   
-  cod=(funcp)codigo;
-  return cod;
-
+  
+  return (funcp)codigo;
 }
 

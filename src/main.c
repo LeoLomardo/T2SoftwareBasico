@@ -1,7 +1,17 @@
-#include<stdlib.h>
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "geracodigo.h"
-#include <stdio.h>
+
+
+void printInstruction(unsigned char first[], int number){
+    printf("{");
+    for (int i = 0; i < number; i++) {
+        printf("%02X", first[i]);
+        if (i < (number - 1)){printf(" ");}
+    }
+    printf("}\n");
+}
 
 int main(int argc, char *argv[]){
   FILE *arquivo = fopen("teste1.txt", "r");
@@ -11,17 +21,14 @@ int main(int argc, char *argv[]){
     exit(1);
   }
 
-  unsigned char codigo[1000];
+  unsigned char *codigo = malloc(700* sizeof(char));
   funcp funcSB;
-  int res;
-  funcSB  = geracodigo(0, codigo);
-  res = (*funcSB)(1);
-  printf("%d", res);
-  printf("\n\nSegundo print\n\n");
-  for (int i=0; i<1000; i++){
-    printf("%d ", codigo[i]);
-  }
-  fclose(arquivo);
   
-  return 0;
+  funcSB  = geracodigo(arquivo, codigo);
+
+  printInstruction(codigo, 700);
+  
+  fclose(arquivo);
+  free(codigo);
+  return 0; 
 }
