@@ -44,5 +44,7 @@ FALTA FAZER:
 
 
     TESTE 1: OK
-    TESTE 2: FUDEU
+    TESTE 2: OK
     TESTE 3: OK
+    TESTE 4: OK
+    TESTE 5: OK

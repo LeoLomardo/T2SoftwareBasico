@@ -68,13 +68,12 @@ int posicaoVariavel(unsigned char *codigo, int posicaoVet, int val){
     return 0;
 }
 int operacao(unsigned char *codigo, int posicaoVet, char var0, int idx0){
-    int retorno = 0;
 
     if(var0=='p'){
         if(idx0 ==1){   
-            posicaoVet =escreverVet(codigo, posicaoVet, operacao_P1, TAMANHO_OPERACAO);					
+            posicaoVet = escreverVet(codigo, posicaoVet, operacao_P1, TAMANHO_OPERACAO);					
         }else if(idx0 ==2){
-            posicaoVet =escreverVet(codigo, posicaoVet, operacao_P2, TAMANHO_OPERACAO);  
+            posicaoVet = escreverVet(codigo, posicaoVet, operacao_P2, TAMANHO_OPERACAO);  
         }
         return 0;
     }else if(var0=='v'){

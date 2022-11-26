@@ -14,7 +14,7 @@ void printInstruction(unsigned char first[], int number){
 }
 
 int main(int argc, char *argv[]){
-  FILE *arquivo = fopen("teste1.txt", "r");
+  FILE *arquivo = fopen("teste5.txt", "r");
   printf("\n\nPrimeiro print\n\n");
   if(!arquivo){
     printf("Erro ao abrir o arquivo");
