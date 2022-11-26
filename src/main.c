@@ -14,12 +14,12 @@ int main(int argc, char *argv[]){
   unsigned char codigo[1000];
   funcp funcSB;
   int res;
-  //funcSB  = geracodigo(arquivo, codigo);
-  res = (*funcSB)(arquivo, codigo);
+  funcSB  = geracodigo(0, codigo);
+  res = (*funcSB)(1);
   printf("%d", res);
   printf("\n\nSegundo print\n\n");
   for (int i=0; i<1000; i++){
-    printf("%d", codigo[i]);
+    printf("%d ", codigo[i]);
   }
   fclose(arquivo);
   

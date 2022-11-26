@@ -142,15 +142,19 @@ gdb ./a.out*/
                 if (fscanf(arquivo_entrada, "f %c%d %d %d", &var0, &idx0, &n1, &n2) != 4){
                     error("comando invalido", line);
                 }
-                codigo[posicaoVet++] = 0x83;
+                codigo[posicaoVet] = 0x83;
                 posicaoVet++;
                 posicaoVet += operacao(codigo, posicaoVet, var0,idx0);
-                
+                codigo[posicaoVet]=0x0f; posicaoVet++; codigo[posicaoVet]=0x8c; posicaoVet++; /*jl lable*/
+                codigo[posicaoVet]=0x00; posicaoVet++; codigo[posicaoVet]=0x00; posicaoVet++;
+                codigo[posicaoVet]=0x00; posicaoVet++; codigo[posicaoVet]=0x00; posicaoVet++;
             
                 desvio2.desvioIfJl[desvio2.linhaIfjl]=n1;
                 desvio2.linhaIfjl++;
                 
-                posicaoVet +=escreverVet(codigo, posicaoVet, desvioCon,TAMANHO_DESVIO_CON);
+                codigo[posicaoVet]=0x0f; posicaoVet++; codigo[posicaoVet]=0x84; posicaoVet++; /*jl lable*/
+                codigo[posicaoVet]=0x00; posicaoVet++; codigo[posicaoVet]=0x00; posicaoVet++;
+                codigo[posicaoVet]=0x00; posicaoVet++; codigo[posicaoVet]=0x00; posicaoVet++;
 
                 desvio2.desvioIfje[desvio2.linhaIfje]=n2;
                 desvio2.linhaIfje++;
