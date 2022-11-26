@@ -44,7 +44,6 @@ int posicaoVariavel(unsigned char *codigo, int posicaoVet, int val){
     int retorno = 0;
     if(val == 1){
         codigo[posicaoVet]=0xF0;
-            
             retorno = posicaoVet+1;
 
             return retorno;
