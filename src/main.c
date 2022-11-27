@@ -22,7 +22,7 @@ int main(int argc, char *argv[]){
     fclose(myfp);
 
     /* chama a função */
-    res = (*funcaoSB)(1);  /* passando parâmetro apropriados */
+    res = (*funcaoSB)(1, 3);  /* passando parâmetro apropriados */
 
     printf("%d", res);
     return 0;
