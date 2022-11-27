@@ -436,7 +436,6 @@ funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){
                         posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0); 
                     }
                     if(var0=='v'&& var1=='v'){
-
                         posicaoVet = escreverVet(codigo, posicaoVet, movParamReg,3);
                         posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
                         posicaoVet = escreverVet(codigo, posicaoVet, multiVV_VP,3);
