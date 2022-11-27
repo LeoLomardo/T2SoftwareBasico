@@ -1,7 +1,49 @@
-RelatÃ³rio do Segundo Trabalho de Software BÃ¡sico - INF1018 - 20222.2
+Relatorio Trabalho 2 - Software Basico - INF1018 - 20222.2
 
 Alunos: 
 Leo Land Bairos Lomardo - 2020201
 Lucas Daibes Rachid de Lucena - 2010796
 
 Objetivo do trabalho: criar um compilador para a linguagem SB, utilizando a linguagem C.
+
+Tentamos realizar diversos testes utilizando a linguagem SB, e acredito que conseguimos realizar todos eles. Para resumir o relatório, demostrarei apenas 2 códigos exemplos,
+onde 1 trata erro na sintaxe e o outro busca explorar todas as funcionalidades da linguagem que foram implementadas no trabalho.
+
+Primeiro Teste:
+    -Objetivo: Testar erros na sintaxe;
+    -Código Teste:
+        v1 := p1
+        v1 += p2
+        p1 -= p2
+        t1 *= p1 <---- 't' esta errado
+        ret v1
+    -Resultado:
+        1 v1 := p1
+        2 v1 += p2
+        3 p1 -= p2
+        erro comando desconhecido na linha 4
+    APROVADO
+
+Segundo Teste:
+    -Objetivo: Testar todas as funcoes da linguagem que foram implementadas em um unico codigo
+    -Codigo Teste:
+        v1 := $0
+        v2 := p1
+        v3 := p2
+        p2 -= $5
+        v4 := p2
+        if v4 11 12
+        ret v4
+        v1 := $99
+        v2 *= $10
+        v2 += $3
+        ret v2
+        ret v1
+    -Resultado (p1, p2):
+        (1, 5):
+            Valor de Retorno: 0 
+        (1, 2):
+            Valor de Retorno: 1
+        (1, 12):
+            Valor de Retorno: 7
+    APROVADO

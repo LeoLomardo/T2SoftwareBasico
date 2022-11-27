@@ -1,40 +1,48 @@
-#include    <stdio.h>
-#include    <string.h>
-#include    <stdlib.h>
-#include    "geracodigo.h"
+#include  <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "geracodigo.h"
 
+funcp geracodigo(FILE *f, unsigned char *codigo);
+static void error (const char *msg, int line);
 int escreverVet(unsigned char *codigo, int posicaoVet, unsigned char novoCod[], int tamanhoAdicional);
 int posicaoVariavel(unsigned char *codigo, int posicaoVet, int val );
-funcp geracodigo(FILE *f, unsigned char *codigo);
 int operacao(unsigned char *codigo, int posicaoVet, char var0, int idx0);
-static void error (const char *msg, int line);
 
-#define TAMANHO_INICIO 8
 #define TAMANHO_DESVIO_CON 12
-#define TAMANHO_OPERACAO 2
-#define TAMANHO_DESVIO_INCON 5
-#define TAMANHO_FINAL 2
+#define TAMANHO_INICIO 8
 #define TAMANHO_DESVCOND 6
+#define TAMANHO_DESVIO_INCON 5
+#define TAMANHO_VAR_REG 4
+#define TAMANHO_OPERACAO 2
+#define TAMANHO_FINAL 2
+#define TAMANHO_MULT_PAR 2
 
 static unsigned char inicioCod[TAMANHO_INICIO] = {0x55, 0x48, 0x89, 0xE5, 0x48, 0x83, 0xEC, 0x20};    
-static unsigned char operacao_P1[TAMANHO_OPERACAO] = {0xFF, 0x00};
-static unsigned char operacao_P2[TAMANHO_OPERACAO] = {0xFE, 0x00};
 static unsigned char desvioCond_P1[TAMANHO_DESVCOND] = {0x0F, 0x8C, 0x00, 0x00, 0x00, 0x00};
 static unsigned char desvioCod_P2[TAMANHO_DESVCOND] = {0x0F, 0x84, 0x00, 0x00, 0x00, 0x00};
 static unsigned char desvioIncon[TAMANHO_DESVIO_INCON] = {0XE9, 0x00, 0x00, 0x00, 0x00};
+static unsigned char movParamReg[3] = {0x44, 0x8B, 0x55};
+static unsigned char movRegiVar[3] = {0x44, 0x89, 0x55};
+static unsigned char movSubVarVar[3] = {0x44, 0x29, 0x55};
+static unsigned char somaVarVar[3] = {0x44, 0x01, 0x55};
+static unsigned char multiVV_VP[3] = {0x44, 0x0F, 0xAF};
+static unsigned char multiConst[3] = {0x45, 0x69, 0xD2};
+static unsigned char operacao_P1[TAMANHO_OPERACAO] = {0xFF, 0x00};
+static unsigned char operacao_P2[TAMANHO_OPERACAO] = {0xFE, 0x00};
+static unsigned char multi_PAR[TAMANHO_MULT_PAR] = {0x0F, 0xAF};
 static unsigned char finalCod[TAMANHO_FINAL] = {0xC9, 0xC3};
 
 typedef int (*funcp) ();
-
 struct If{																		
-    int desvioIfJl[20];
-    int desvioIfje[20];																	
-    int linhaIfjl;
-    int linhaIfje;
+    int desvioIfJL[20];
+    int destinoJL;
+    int desvioIfJE[20];																	
+    int destinoJE;
 };
 struct Go{
-    int desvioGo[20];
-    int linhaGo;
+    int desvioGO[20];
+    int destinoGO;
 };
 
 static void error (const char *msg, int line){
@@ -45,30 +53,25 @@ static void error (const char *msg, int line){
 int posicaoVariavel(unsigned char *codigo, int posicaoVet, int val){
     int retorno = 0;
     if(val == 1){
-        codigo[posicaoVet]=0xF0;
-            retorno = posicaoVet+1;
-
-            return retorno;
+        codigo[posicaoVet] = 0xF0;
+        retorno = posicaoVet+1;
+        return retorno;
     }else if(val == 2){
-        codigo[posicaoVet]=0xF4;
-            retorno = posicaoVet+1;
-
-            return retorno;
+        codigo[posicaoVet] = 0xF4;
+        retorno = posicaoVet+1;
+        return retorno;
     }else if(val == 3){
-        codigo[posicaoVet]=0xF8;
-            retorno = posicaoVet+1;
-
-            return retorno;
+        codigo[posicaoVet] = 0xF8;
+        retorno = posicaoVet+1;
+        return retorno;
     }else if(val == 4){
-        codigo[posicaoVet]=0xFC;
-            retorno = posicaoVet+1;
-
-            return retorno;
+        codigo[posicaoVet] = 0xFC;
+        retorno = posicaoVet+1;
+        return retorno;
     }
     return 0;
 }
 int operacao(unsigned char *codigo, int posicaoVet, char var0, int idx0){
-
     if(var0=='p'){
         if(idx0 ==1){   
             posicaoVet = escreverVet(codigo, posicaoVet, operacao_P1, TAMANHO_OPERACAO);					
@@ -77,10 +80,10 @@ int operacao(unsigned char *codigo, int posicaoVet, char var0, int idx0){
         }
         return 0;
     }else if(var0=='v'){
-        codigo[posicaoVet]=0x7D;
+        codigo[posicaoVet] = 0x7D;
         posicaoVet++;
         posicaoVariavel(codigo, posicaoVet, idx0);
-        codigo[posicaoVet]=0x00;
+        codigo[posicaoVet] = 0x00;
         posicaoVet++;
         return posicaoVet;
     }
@@ -98,118 +101,60 @@ int escreverVet(unsigned char *codigo, int posicaoVet, unsigned char novoCod[], 
 
 
 funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){	
-    funcp cod;
-    int posicaoVet = 0;
-    int line = 1;
-    int c;
-    int auxDesv = 0;
-    int a=0;
-    int linha  = 0;
-
-    int num,num2;
-    unsigned char *pnum=(unsigned char*)&num;
-    unsigned char *pnum2=(unsigned char*)&num2;
-    long int endereco[20];
-
     struct Go desvio;
     struct If desvio2;
-
-    desvio.linhaGo=0;
-    desvio2.linhaIfjl=0;
-    desvio2.linhaIfje=0;
-
+    int posicaoVet = 0;
+    int c = 0;
+    int line = 1;
+    desvio.destinoGO=0;
+    desvio2.destinoJL=0;
+    desvio2.destinoJE=0;
+    
     posicaoVet = escreverVet(codigo, posicaoVet, inicioCod,TAMANHO_INICIO);
-    // TAMANHO_INICIO;
 
-    auxDesv = 8;
-
-    while ((c = fgetc(arquivo_entrada)) != EOF){                                        
-
-        endereco[linha]=(long)(&codigo[posicaoVet]); 
-        linha++;
-
+    while ((c = fgetc(arquivo_entrada)) != EOF){
         switch (c){
-            case 'i': { 																								 
-                char var0;
-                int idx0, n1, n2;
-                
-                if (fscanf(arquivo_entrada, "f %c%d %d %d", &var0, &idx0, &n1, &n2) != 4){
-                    error("comando invalido", line);
-                }
-                codigo[posicaoVet] = 0x83;
-                posicaoVet++;
-
-                /*posicaoVet += */operacao(codigo, posicaoVet, var0,idx0);
-
-                posicaoVet = escreverVet(codigo, posicaoVet, desvioCond_P1,TAMANHO_DESVCOND);
-                // +=TAMANHO_DESVCOND;
-
-                desvio2.desvioIfJl[desvio2.linhaIfjl]=n1;
-                desvio2.linhaIfjl++;
-
-                posicaoVet = escreverVet(codigo, posicaoVet, desvioCod_P2,TAMANHO_DESVCOND);
-                //posicaoVet +=TAMANHO_DESVCOND;
-
-                desvio2.desvioIfje[desvio2.linhaIfje]=n2;
-                desvio2.linhaIfje++;
-
-                printf("%d if %c%d %d %d\n", line, var0, idx0, n1, n2);
-                break;
-            }
-            case 'g': {																								
-                int n = 0; 
-                if (fscanf(arquivo_entrada, "o %d", &n) != 1){
-                    error("Comando invalido", line);
-                }
-                posicaoVet = escreverVet(codigo, posicaoVet, desvioIncon,TAMANHO_DESVIO_INCON);
-                //posicaoVet +=TAMANHO_DESVIO_INCON;
-
-                desvio.desvioGo[desvio.linhaGo]=n; 
-                desvio.linhaGo++;
-                printf("%d go %d\n", line, n);
-                break;
-            }
             case 'r':{																								
                 char var0;
                 int idx0;
-                
                 if (fscanf(arquivo_entrada, "et %c%d", &var0, &idx0) != 2)
                     error("comando invalido", line);
-                if(var0=='p'){
-                    codigo[posicaoVet]=0x89;
-                    posicaoVet++;
-                    if(idx0==1){
 
-                        codigo[posicaoVet]=0xF8;
+                switch(var0){
+                    case 'p':
+                        codigo[posicaoVet] = 0x89;
                         posicaoVet++;
 
-                    }else if(idx0==2){
+                        if(idx0==1){
+                            codigo[posicaoVet] = 0xF8;
+                            posicaoVet++;
 
-                        codigo[posicaoVet]=0xF0;
+                        }else if(idx0==2){
+                            codigo[posicaoVet] = 0xF0;
+                            posicaoVet++;
+                        }
+                        break;
+                    case 'v':
+                        codigo[posicaoVet] = 0x8B;
                         posicaoVet++;
+                        
+                        codigo[posicaoVet] = 0x45;
+                        posicaoVet++;
+                        
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);  
+                        break;
+                    case '$':
+                        codigo[posicaoVet] = 0xB8;
+                        posicaoVet++;
+                        
+                        *((int *)&codigo[posicaoVet])=idx0;
+                        posicaoVet+=4;
+                        break;
                     }
-                }
-                if(var0=='v'){         
-                    codigo[posicaoVet]=0x8B;
-                    posicaoVet++;
-                    
-                    codigo[posicaoVet]=0x45;
-                    posicaoVet++;
-                    
-                    posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);        
-                }
-                if(var0=='$'){   
-                    codigo[posicaoVet]=0xB8;
-                    posicaoVet++;
-                    
-                    *((int *)&codigo[posicaoVet])=idx0;
-                    posicaoVet+=4;
-                }
-                    posicaoVet =escreverVet(codigo, posicaoVet, finalCod,TAMANHO_FINAL);
-                    printf("%d ret %c%d\n", line, var0, idx0);
-                    break;
+                posicaoVet = escreverVet(codigo, posicaoVet, finalCod,TAMANHO_FINAL);
+                printf("%d ret %c%d\n", line, var0, idx0);
+                break;
             }
-            
             case 'v':
             case 'p':{ 																			
                 char var0 = c, var1, op;
@@ -222,439 +167,334 @@ funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){
 
                 if(op==':'){
                     if(var0=='p' && var1=='p'){
-                        codigo[posicaoVet]=0x89;
+                        codigo[posicaoVet] = 0x89;
                         posicaoVet++;
 
                         if(idx0 == 1){
-                            codigo[posicaoVet]=0xF7;
+                            codigo[posicaoVet] = 0xF7;
                             posicaoVet++;
                         }else if(idx0 == 2){
-                            codigo[posicaoVet]=0xFE;
+                            codigo[posicaoVet] = 0xFE;
                             posicaoVet++;
                         }
-                        
                     }
-                    if((var0=='p' && var1=='v')||(var0=='v' && var1=='p')){
+                    if((var0=='v' && var1=='p') || (var0=='p' && var1=='v')){
                         if(var0=='v' && var1=='p'){   
-                            codigo[posicaoVet]=0x89;
+                            codigo[posicaoVet] = 0x89;
                             posicaoVet++;
+
                             if(idx1 == 1){
-                                codigo[posicaoVet]=0x7D;
+                                codigo[posicaoVet] = 0x7D;
                                 posicaoVet++;
                             }else if(idx1 == 2){
-                                codigo[posicaoVet]=0x75;
+                                codigo[posicaoVet] = 0x75;
                                 posicaoVet++;
                             }
-                            
-                           posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);          
+                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);          
                         }
                         if(var0=='p' && var1=='$'){
                             if(idx0 == 1){
-                                codigo[posicaoVet]=0xBF;
+                                codigo[posicaoVet] = 0xBF;
                                 posicaoVet++;
                             }else if(idx0 == 2){
-                                codigo[posicaoVet]=0xBE;
+                                codigo[posicaoVet] = 0xBE;
                                 posicaoVet++;
                             }
-                            *((int*)&codigo[posicaoVet])=idx1;		
+                            *((int*)&codigo[posicaoVet]) = idx1;		
                             posicaoVet+=4;
                         }
                         if(var0=='p' && var1=='v'){   
-                            codigo[posicaoVet]=0x8B;
+                            codigo[posicaoVet] = 0x8B;
                             posicaoVet++;
+
                             if(idx0 == 1){
-                                codigo[posicaoVet]=0x7D;
+                                codigo[posicaoVet] = 0x7D;
                                 posicaoVet++;
                             }else if(idx0 == 2){
-                                codigo[posicaoVet]=0x75;
+                                codigo[posicaoVet] = 0x75;
                                 posicaoVet++;
                             }
-                            
-
-                            posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
+                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx1);
                         }
                     }
                     if(var0=='v' && var1=='$'){   
-
-                        codigo[posicaoVet]=0xC7;
+                        codigo[posicaoVet] = 0xC7;
                         posicaoVet++;
-                        codigo[posicaoVet]=0x45;
+                        codigo[posicaoVet] = 0x45;
                         posicaoVet++;
                         
-                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
-
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);
                         *((int *)&codigo[posicaoVet])=idx1;
                         posicaoVet+=4;
                     }
                     if(var0=='v'&& var1=='v'){
-                        codigo[posicaoVet]=0x44;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x8B;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x55;
-                        posicaoVet++;
-                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
+                        posicaoVet = escreverVet(codigo, posicaoVet, movParamReg,3);
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx1);
                         
-                        codigo[posicaoVet]=0x44;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x89;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x55;
-                        posicaoVet++;
-                        
-                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);		
-                        
+                        posicaoVet = escreverVet(codigo, posicaoVet, movRegiVar,3);
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);		
                     }
                 }
                 if(op=='+'){												
                     if(var0=='p' && var1=='p'){
-                        codigo[posicaoVet]=0x01;
+                        codigo[posicaoVet] = 0x01;
                         posicaoVet++;
+
                         if(idx0==1){
-                            codigo[posicaoVet]=0xF7;
+                            codigo[posicaoVet] = 0xF7;
                             posicaoVet++;
                         }else if(idx0==2){
-                            codigo[posicaoVet]=0xFE; 
+                            codigo[posicaoVet] = 0xFE; 
                             posicaoVet++;
                         }
-                
                     }
-                    if((var0=='p' && var1=='v')||(var0=='v' && var1=='p')){
+                    if((var0=='v' && var1=='p') || (var0=='p' && var1=='v')){
                         if(var0=='v' && var1=='p'){   
-                            codigo[posicaoVet]=0x01;
+                            codigo[posicaoVet] = 0x01;
                             posicaoVet++;
+
                             if(idx1==1){
-                                codigo[posicaoVet]=0x7d;
+                                codigo[posicaoVet] = 0x7D;
                                 posicaoVet++;
                             }else if(idx1==2){
-                                codigo[posicaoVet]=0x75;
+                                codigo[posicaoVet] = 0x75;
                                 posicaoVet++;
                             }
-                            
-                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);             
+                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);             
                         }
                         if(var0=='p' && var1=='v'){   
-                            codigo[posicaoVet]=0x03;
+                            codigo[posicaoVet] = 0x03;
                             posicaoVet++;
+
                             if(idx0==1){
-                                codigo[posicaoVet]=0x7D;
+                                codigo[posicaoVet] = 0x7D;
                                 posicaoVet++;
                             }else if(idx0==2){
-                                codigo[posicaoVet]=0x75; 
+                                codigo[posicaoVet] = 0x75; 
                                 posicaoVet++;
                             }
-                            posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
+                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx1);
                         }
                     }
                     if(var0=='p' && var1=='$'){
-                        codigo[posicaoVet]=0x81;
-                        posicaoVet++;  
+                        codigo[posicaoVet] = 0x81;
+                        posicaoVet++; 
+
                         if(idx0==1){
-                            codigo[posicaoVet]=0xC7;
+                            codigo[posicaoVet] = 0xC7;
                             posicaoVet++;
                         }else if(idx0==2){
-                            codigo[posicaoVet]=0xC6;
+                            codigo[posicaoVet] = 0xC6;
                             posicaoVet++;
                         }          	
                         *((int *)&codigo[posicaoVet])=idx1;
                         posicaoVet+=4;                     
                     }
                     if(var0=='v' && var1=='$'){    
-                        codigo[posicaoVet]=0x81;
+                        codigo[posicaoVet] = 0x81;
                         posicaoVet++;
-                        codigo[posicaoVet]=0x45;
+                        codigo[posicaoVet] = 0x45;
                         posicaoVet++;
                         
-                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
-                        *((int *)&codigo[posicaoVet])=idx0;
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);
+                        *((int *)&codigo[posicaoVet])=idx1;
                         posicaoVet+=4;
                     }
                     if(var0=='v' && var1=='v'){    
-                        codigo[posicaoVet]=0x44;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x8b;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x55;
-                        posicaoVet++;	
-                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
+                        posicaoVet = escreverVet(codigo, posicaoVet, movParamReg,3);	
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx1);
     
-                        codigo[posicaoVet]=0x44;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x01;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x55;
-                        posicaoVet++;	
-                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
+                        posicaoVet = escreverVet(codigo, posicaoVet, somaVarVar,3);	
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);
                     } 
-                            
                 }
                 if(op=='-'){														
                     if(var0=='p' && var1=='p'){
-                        codigo[posicaoVet]=0x29;
+                        codigo[posicaoVet] = 0x29;
                         posicaoVet++;
+
                         if(idx0==1){
-                            codigo[posicaoVet]=0xF7;
+                            codigo[posicaoVet] = 0xF7;
                             posicaoVet++;
                         }else if(idx0==2){
-                            codigo[posicaoVet]=0xFE;
+                            codigo[posicaoVet] = 0xFE;
                             posicaoVet++;
                         }	
                     }
-                    if((var0=='p' && var1=='v')||(var0=='v' && var1=='p')){
+                    if((var0=='v' && var1=='p') || (var0=='p' && var1=='v')){
                         if(var0=='v' && var1=='p'){   
-                            codigo[posicaoVet]=0x29;
+                            codigo[posicaoVet] = 0x29;
                             posicaoVet++;
+
                             if(idx1==1){
-                                codigo[posicaoVet]=0x7D;
+                                codigo[posicaoVet] = 0x7D;
                                 posicaoVet++;
                             }else if(idx1==2){
-                                codigo[posicaoVet]=0x75;
+                                codigo[posicaoVet] = 0x75;
                                 posicaoVet++;
                             }
-                            posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);               
+                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);               
                         }
                         if(var0=='p' && var1=='v'){   
-                            codigo[posicaoVet]=0x2b;
+                            codigo[posicaoVet] = 0x2B;
                             posicaoVet++;
+
                             if(idx0==1){
-                                codigo[posicaoVet]=0x7D;
+                                codigo[posicaoVet] = 0x7D;
                                 posicaoVet++;
                             }else if(idx0==2){
-                                codigo[posicaoVet]=0x75;
+                                codigo[posicaoVet] = 0x75;
                                 posicaoVet++;
                             }
-                            posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
+                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx1);
                         }
                     }        
                     if(var0=='p' && var1=='$'){
-                        codigo[posicaoVet]=0x81;
+                        codigo[posicaoVet] = 0x81;
                         posicaoVet++;
+
                         if(idx0==1){
-                                codigo[posicaoVet]=0xEF;
-                                posicaoVet++;
-                            }else if(idx0==2){
-                                codigo[posicaoVet]=0xEE;
-                                posicaoVet++;
-                            }
-                        
-                        *((int *)&codigo[posicaoVet])=idx0;
+                            codigo[posicaoVet] = 0xEF;
+                            posicaoVet++;
+                        }else if(idx0==2){
+                            codigo[posicaoVet] = 0xEE;
+                            posicaoVet++;
+                        }
+                        *((int *)&codigo[posicaoVet])=idx1;
                         posicaoVet+=4;       
                     }
                     if(var0=='v' && var1=='$'){    
-                        codigo[posicaoVet]=0x81;
+                        codigo[posicaoVet] = 0x81;
                         posicaoVet++;
-                        codigo[posicaoVet]=0x6d;
+                        codigo[posicaoVet] = 0x6D;
                         posicaoVet++;
                         
                         posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
-                        *((int *)&codigo[posicaoVet])=idx0;
+                        *((int *)&codigo[posicaoVet])=idx1;
                         posicaoVet+=4;
                     }
                     if(var0=='v' && var1=='v'){    
-                        codigo[posicaoVet]=0x44;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x8B;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x55;
-                        posicaoVet++;
-                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
-            
-                        codigo[posicaoVet]=0x44;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x29;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x55;
-                        posicaoVet++;
-                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
+                        posicaoVet = escreverVet(codigo, posicaoVet, movParamReg,3);
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx1);
+                        posicaoVet = escreverVet(codigo, posicaoVet, movSubVarVar,3);
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);
                     }    	
                 }
                 if(op=='*'){
                     if(var0=='p' && var1=='p'){
-                    codigo[posicaoVet]=0x0F;
-                    posicaoVet++;
-                    codigo[posicaoVet]=0xAF;
-                    posicaoVet++;
-                    if(idx0==1){
-                            codigo[posicaoVet]=0xFE;
+                        posicaoVet = escreverVet(codigo, posicaoVet, multi_PAR,TAMANHO_MULT_PAR);
+                        if(idx0==1){
+                            codigo[posicaoVet] = 0xFE;
                             posicaoVet++;
-                    }else if(idx0==2){
-                        codigo[posicaoVet]=0xF7;
-                        posicaoVet++;
+                        }else if(idx0==2){
+                            codigo[posicaoVet] = 0xF7;
+                            posicaoVet++;
+                        }
                     }
-                			
-                    }
-                    if((var0=='p' && var1=='v')||(var0=='v' && var1=='p')){
+                    if((var0=='v' && var1=='p') || (var0=='p' && var1=='v')){
                         if(var0=='v' && var1=='p'){   
-                            codigo[posicaoVet]=0x44;
-                            posicaoVet++;
-                            codigo[posicaoVet]=0x8b;
-                            posicaoVet++;
-                            codigo[posicaoVet]=0x55;
-                            posicaoVet++;
-                            
-                            posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
-                                
-                            codigo[posicaoVet]=0x44;
-                            posicaoVet++;
-                            codigo[posicaoVet]=0x0f;
-                            posicaoVet++;
-                            codigo[posicaoVet]=0xaf;
-                            posicaoVet++;   
+                            posicaoVet = escreverVet(codigo, posicaoVet, movParamReg,3);
+                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);
+                            posicaoVet = escreverVet(codigo, posicaoVet, multiVV_VP,3);
 
                             if(idx1==1){
-                                codigo[posicaoVet]=0xD7;
+                                codigo[posicaoVet] = 0xD7;
                                 posicaoVet++;
                             }else if(idx1==2){
-                                codigo[posicaoVet]=0xD6;
+                                codigo[posicaoVet] = 0xD6;
                                 posicaoVet++;
                             }                                 
                             
-                            codigo[posicaoVet]=0x44;
-                            posicaoVet++;
-                            codigo[posicaoVet]=0x89;
-                            posicaoVet++;
-                            codigo[posicaoVet]=0x55;
-                            posicaoVet++; 
-                            
-                            posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);                              
+                            posicaoVet = escreverVet(codigo, posicaoVet, movRegiVar,3);
+                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);                              
                         }
                         if(var0=='p' && var1=='v'){   
-                            codigo[posicaoVet]=0x0f;posicaoVet++;
-                            codigo[posicaoVet]=0xaf;posicaoVet++;
+                            posicaoVet = escreverVet(codigo, posicaoVet, multi_PAR,TAMANHO_MULT_PAR);
                             if(idx0==1){
-                                codigo[posicaoVet]=0x7D;
+                                codigo[posicaoVet] = 0x7D;
                                 posicaoVet++;
                             }else if(idx0==2){
-                                codigo[posicaoVet]=0x75;
+                                codigo[posicaoVet] = 0x75;
                                 posicaoVet++;
                             }
                             posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
                         }
                     }     
                     if(var0=='p' && var1=='$'){
-                        codigo[posicaoVet]=0x69;
+                        codigo[posicaoVet] = 0x69;
                         posicaoVet++;
+
                         if(idx0==1){
-                            codigo[posicaoVet]=0xFF;
+                            codigo[posicaoVet] = 0xFF;
                             posicaoVet++;
                         }else if(idx0==2){
-                            codigo[posicaoVet]=0xF6;
+                            codigo[posicaoVet] = 0xF6;
                             posicaoVet++;
                         }
-                        *((int *)&codigo[posicaoVet])=idx0;
-            posicaoVet+=4;              
+                        *((int *)&codigo[posicaoVet])=idx1;
+                        posicaoVet+=4;              
                     }   
                     if(var0=='v' && var1=='$'){    
-                        codigo[posicaoVet]=0x44;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x8b;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x55;
-                        posicaoVet++;
-                        
-                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
-                        
-                        codigo[posicaoVet]=0x45;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x69;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0xd2;
-                        posicaoVet++;
-                        *((int *)&codigo[posicaoVet])=idx0;
-                        posicaoVet+=4;
-                                        
-                        codigo[posicaoVet]=0x44;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x89;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x55;
-                        posicaoVet++;
-                        
+                        posicaoVet = escreverVet(codigo, posicaoVet, movParamReg,3);
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);
+                        posicaoVet = escreverVet(codigo, posicaoVet, multiConst,3);
+
+                        *((int *)&codigo[posicaoVet])=idx1;
+                        posicaoVet+=4;       
+                        posicaoVet = escreverVet(codigo, posicaoVet, movRegiVar,3);
                         posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0); 
                     }
                     if(var0=='v'&& var1=='v'){
-                        codigo[posicaoVet]=0x44;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x8B;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x55;
-                        posicaoVet++;
-                        
+
+                        posicaoVet = escreverVet(codigo, posicaoVet, movParamReg,3);
                         posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
+                        posicaoVet = escreverVet(codigo, posicaoVet, multiVV_VP,3);
 
-                        codigo[posicaoVet]=0x44;
+                        codigo[posicaoVet] = 0x55;
                         posicaoVet++;
-                        codigo[posicaoVet]=0x0F;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0xAf;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x55;
-                        posicaoVet++;
+
                         posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
-
-                        codigo[posicaoVet]=0x44;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x89;
-                        posicaoVet++;
-                        codigo[posicaoVet]=0x55;
-                        posicaoVet++;
-                        
+                        posicaoVet = escreverVet(codigo, posicaoVet, movRegiVar,3);
                         posicaoVet =posicaoVariavel(codigo, posicaoVet, idx0);
                     } 
                 }       
                 break;                
             }
+            case 'i': { 																								 
+                char var0;
+                int idx0, n1, n2;
+                
+                if (fscanf(arquivo_entrada, "f %c%d %d %d", &var0, &idx0, &n1, &n2) != 4){
+                    error("comando invalido", line);
+                }
+                
+                operacao(codigo, posicaoVet, var0,idx0);
+                posicaoVet = escreverVet(codigo, posicaoVet, desvioCond_P1,TAMANHO_DESVCOND);
+                desvio2.desvioIfJL[desvio2.destinoJL] = n1;
+                desvio2.destinoJL++;
+
+                posicaoVet = escreverVet(codigo, posicaoVet, desvioCod_P2,TAMANHO_DESVCOND);
+                desvio2.desvioIfJE[desvio2.destinoJE] = n2;
+                desvio2.destinoJE++;
+
+                printf("%d if %c%d %d %d\n", line, var0, idx0, n1, n2);
+                break;
             }
+            case 'g': {																								
+                int n1; 
+                if (fscanf(arquivo_entrada, "o %d", &n1) != 1){
+                    error("Comando invalido", line);
+                }
+                posicaoVet = escreverVet(codigo, posicaoVet, desvioIncon,TAMANHO_DESVIO_INCON);
+                desvio.desvioGO[desvio.destinoGO] = n1; 
+                desvio.destinoGO++;
+                printf("%d go %d\n", line, n1);
+                break;
+            }
+            default: error("comando desconhecido", line);
+        }
         line ++;
         fscanf(arquivo_entrada, " ");
     }
-        auxDesv = 0;    
-        desvio.linhaGo = 0;
-        while(codigo[auxDesv]!= 0xC9){
-            if(codigo[auxDesv] == 0xE9){
-                auxDesv+=5;
-                num = endereco[desvio.desvioGo[desvio.linhaGo]-1]-(long)&codigo[auxDesv];
-                auxDesv-=4; 
-                desvio.linhaGo++;              
-                while(a < 4){
-                    codigo[auxDesv]=pnum[a];
-                    auxDesv++; a++;
-                }
-                a=0;
-            }
-            auxDesv++;
-        }   
-        auxDesv = 0;
-        desvio2.linhaIfje=0;
-        desvio2.linhaIfjl=0;
-        while(codigo[auxDesv]!=0xc9){
-            if(codigo[auxDesv]==0x8c){
-                auxDesv+=5;
-                num2=endereco[desvio2.desvioIfJl[desvio2.linhaIfjl]-1]-(long)&codigo[auxDesv];
-                auxDesv-=4;
-
-               while(a<4){
-                    codigo[auxDesv]=pnum2[a];
-                    auxDesv++; 
-                    a++;
-                }
-                a=0;
-                desvio2.linhaIfjl++;
-            }
-            if(codigo[auxDesv]==0x84){
-                auxDesv+=5;
-                num2=endereco[desvio2.desvioIfje[desvio2.linhaIfje]-1]-(long)&codigo[auxDesv];
-                auxDesv-=4;
-               while(a<4){
-                    codigo[auxDesv]=pnum2[a];
-                    auxDesv++; a++;
-                }
-                a=0;
-                desvio2.linhaIfje++;
-            } 
-            auxDesv++;
-        }   
-  
-  return (funcp)codigo;
+    return (funcp)codigo;
 }
-
