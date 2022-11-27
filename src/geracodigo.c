@@ -1,5 +1,4 @@
-#include  <stdio.h>
-#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include "geracodigo.h"
 
@@ -71,6 +70,7 @@ int posicaoVariavel(unsigned char *codigo, int posicaoVet, int val){
     }
     return 0;
 }
+
 int operacao(unsigned char *codigo, int posicaoVet, char var0, int idx0){
     if(var0=='p'){
         if(idx0 ==1){   
@@ -98,7 +98,6 @@ int escreverVet(unsigned char *codigo, int posicaoVet, unsigned char novoCod[], 
     retorno = posicaoVet + tamanhoAdicional;
     return retorno;
 }
-
 
 funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){	
     struct Go desvio;
@@ -178,44 +177,42 @@ funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){
                             posicaoVet++;
                         }
                     }
-                    if((var0=='v' && var1=='p') || (var0=='p' && var1=='v')){
-                        if(var0=='v' && var1=='p'){   
-                            codigo[posicaoVet] = 0x89;
-                            posicaoVet++;
+                    if(var0=='v' && var1=='p'){   
+                        codigo[posicaoVet] = 0x89;
+                        posicaoVet++;
 
-                            if(idx1 == 1){
-                                codigo[posicaoVet] = 0x7D;
-                                posicaoVet++;
-                            }else if(idx1 == 2){
-                                codigo[posicaoVet] = 0x75;
-                                posicaoVet++;
-                            }
-                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);          
-                        }
-                        if(var0=='p' && var1=='$'){
-                            if(idx0 == 1){
-                                codigo[posicaoVet] = 0xBF;
-                                posicaoVet++;
-                            }else if(idx0 == 2){
-                                codigo[posicaoVet] = 0xBE;
-                                posicaoVet++;
-                            }
-                            *((int*)&codigo[posicaoVet]) = idx1;		
-                            posicaoVet+=4;
-                        }
-                        if(var0=='p' && var1=='v'){   
-                            codigo[posicaoVet] = 0x8B;
+                        if(idx1 == 1){
+                            codigo[posicaoVet] = 0x7D;
                             posicaoVet++;
-
-                            if(idx0 == 1){
-                                codigo[posicaoVet] = 0x7D;
-                                posicaoVet++;
-                            }else if(idx0 == 2){
-                                codigo[posicaoVet] = 0x75;
-                                posicaoVet++;
-                            }
-                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx1);
+                        }else if(idx1 == 2){
+                            codigo[posicaoVet] = 0x75;
+                            posicaoVet++;
                         }
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);          
+                    }
+                    if(var0=='p' && var1=='$'){
+                        if(idx0 == 1){
+                            codigo[posicaoVet] = 0xBF;
+                            posicaoVet++;
+                        }else if(idx0 == 2){
+                            codigo[posicaoVet] = 0xBE;
+                            posicaoVet++;
+                        }
+                        *((int*)&codigo[posicaoVet]) = idx1;		
+                        posicaoVet+=4;
+                    }
+                    if(var0=='p' && var1=='v'){   
+                        codigo[posicaoVet] = 0x8B;
+                        posicaoVet++;
+
+                        if(idx0 == 1){
+                            codigo[posicaoVet] = 0x7D;
+                            posicaoVet++;
+                        }else if(idx0 == 2){
+                            codigo[posicaoVet] = 0x75;
+                            posicaoVet++;
+                        }
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx1);
                     }
                     if(var0=='v' && var1=='$'){   
                         codigo[posicaoVet] = 0xC7;
@@ -248,33 +245,31 @@ funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){
                             posicaoVet++;
                         }
                     }
-                    if((var0=='v' && var1=='p') || (var0=='p' && var1=='v')){
-                        if(var0=='v' && var1=='p'){   
-                            codigo[posicaoVet] = 0x01;
-                            posicaoVet++;
+                    if(var0=='v' && var1=='p'){   
+                        codigo[posicaoVet] = 0x01;
+                        posicaoVet++;
 
-                            if(idx1==1){
-                                codigo[posicaoVet] = 0x7D;
-                                posicaoVet++;
-                            }else if(idx1==2){
-                                codigo[posicaoVet] = 0x75;
-                                posicaoVet++;
-                            }
-                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);             
-                        }
-                        if(var0=='p' && var1=='v'){   
-                            codigo[posicaoVet] = 0x03;
+                        if(idx1==1){
+                            codigo[posicaoVet] = 0x7D;
                             posicaoVet++;
-
-                            if(idx0==1){
-                                codigo[posicaoVet] = 0x7D;
-                                posicaoVet++;
-                            }else if(idx0==2){
-                                codigo[posicaoVet] = 0x75; 
-                                posicaoVet++;
-                            }
-                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx1);
+                        }else if(idx1==2){
+                            codigo[posicaoVet] = 0x75;
+                            posicaoVet++;
                         }
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);             
+                    }
+                    if(var0=='p' && var1=='v'){   
+                        codigo[posicaoVet] = 0x03;
+                        posicaoVet++;
+
+                        if(idx0==1){
+                            codigo[posicaoVet] = 0x7D;
+                            posicaoVet++;
+                        }else if(idx0==2){
+                            codigo[posicaoVet] = 0x75; 
+                            posicaoVet++;
+                        }
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx1);
                     }
                     if(var0=='p' && var1=='$'){
                         codigo[posicaoVet] = 0x81;
@@ -321,34 +316,32 @@ funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){
                             posicaoVet++;
                         }	
                     }
-                    if((var0=='v' && var1=='p') || (var0=='p' && var1=='v')){
-                        if(var0=='v' && var1=='p'){   
-                            codigo[posicaoVet] = 0x29;
-                            posicaoVet++;
+                    if(var0=='v' && var1=='p'){   
+                        codigo[posicaoVet] = 0x29;
+                        posicaoVet++;
 
-                            if(idx1==1){
-                                codigo[posicaoVet] = 0x7D;
-                                posicaoVet++;
-                            }else if(idx1==2){
-                                codigo[posicaoVet] = 0x75;
-                                posicaoVet++;
-                            }
-                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);               
-                        }
-                        if(var0=='p' && var1=='v'){   
-                            codigo[posicaoVet] = 0x2B;
+                        if(idx1==1){
+                            codigo[posicaoVet] = 0x7D;
                             posicaoVet++;
-
-                            if(idx0==1){
-                                codigo[posicaoVet] = 0x7D;
-                                posicaoVet++;
-                            }else if(idx0==2){
-                                codigo[posicaoVet] = 0x75;
-                                posicaoVet++;
-                            }
-                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx1);
+                        }else if(idx1==2){
+                            codigo[posicaoVet] = 0x75;
+                            posicaoVet++;
                         }
-                    }        
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);               
+                    }
+                    if(var0=='p' && var1=='v'){   
+                        codigo[posicaoVet] = 0x2B;
+                        posicaoVet++;
+
+                        if(idx0==1){
+                            codigo[posicaoVet] = 0x7D;
+                            posicaoVet++;
+                        }else if(idx0==2){
+                            codigo[posicaoVet] = 0x75;
+                            posicaoVet++;
+                        }
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx1);
+                    }
                     if(var0=='p' && var1=='$'){
                         codigo[posicaoVet] = 0x81;
                         posicaoVet++;
@@ -391,35 +384,33 @@ funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){
                             posicaoVet++;
                         }
                     }
-                    if((var0=='v' && var1=='p') || (var0=='p' && var1=='v')){
-                        if(var0=='v' && var1=='p'){   
-                            posicaoVet = escreverVet(codigo, posicaoVet, movParamReg,3);
-                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);
-                            posicaoVet = escreverVet(codigo, posicaoVet, multiVV_VP,3);
+                    if(var0=='v' && var1=='p'){   
+                        posicaoVet = escreverVet(codigo, posicaoVet, movParamReg,3);
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);
+                        posicaoVet = escreverVet(codigo, posicaoVet, multiVV_VP,3);
 
-                            if(idx1==1){
-                                codigo[posicaoVet] = 0xD7;
-                                posicaoVet++;
-                            }else if(idx1==2){
-                                codigo[posicaoVet] = 0xD6;
-                                posicaoVet++;
-                            }                                 
-                            
-                            posicaoVet = escreverVet(codigo, posicaoVet, movRegiVar,3);
-                            posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);                              
+                        if(idx1==1){
+                            codigo[posicaoVet] = 0xD7;
+                            posicaoVet++;
+                        }else if(idx1==2){
+                            codigo[posicaoVet] = 0xD6;
+                            posicaoVet++;
+                        }                                 
+                        
+                        posicaoVet = escreverVet(codigo, posicaoVet, movRegiVar,3);
+                        posicaoVet = posicaoVariavel(codigo, posicaoVet, idx0);                              
+                    }
+                    if(var0=='p' && var1=='v'){   
+                        posicaoVet = escreverVet(codigo, posicaoVet, multi_PAR,TAMANHO_MULT_PAR);
+                        if(idx0==1){
+                            codigo[posicaoVet] = 0x7D;
+                            posicaoVet++;
+                        }else if(idx0==2){
+                            codigo[posicaoVet] = 0x75;
+                            posicaoVet++;
                         }
-                        if(var0=='p' && var1=='v'){   
-                            posicaoVet = escreverVet(codigo, posicaoVet, multi_PAR,TAMANHO_MULT_PAR);
-                            if(idx0==1){
-                                codigo[posicaoVet] = 0x7D;
-                                posicaoVet++;
-                            }else if(idx0==2){
-                                codigo[posicaoVet] = 0x75;
-                                posicaoVet++;
-                            }
-                            posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
-                        }
-                    }     
+                        posicaoVet =posicaoVariavel(codigo, posicaoVet, idx1);
+                    }
                     if(var0=='p' && var1=='$'){
                         codigo[posicaoVet] = 0x69;
                         posicaoVet++;

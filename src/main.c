@@ -9,7 +9,7 @@ int main(int argc, char *argv[]){
     int res;
 
     /* Abre o arquivo fonte */
-    if ((myfp = fopen("teste5.txt", "r")) == NULL) {
+    if ((myfp = fopen("teste2.txt", "r")) == NULL) {
       perror("Falha na abertura do arquivo fonte");
       exit(1);
     }
@@ -22,7 +22,7 @@ int main(int argc, char *argv[]){
     fclose(myfp);
 
     /* chama a função */
-    res = (*funcaoSB)(1, 10);  /* passando parâmetro apropriados */
+    res = (*funcaoSB)(1);  /* passando parâmetro apropriados */
 
     printf("%d", res);
     return 0;
