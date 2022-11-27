@@ -1,3 +1,6 @@
+/*Leo Land Bairos Lomardo - 2020201*/
+/*Lucas Daibes Rachid de Lucena - 2010796*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "geracodigo.h"
