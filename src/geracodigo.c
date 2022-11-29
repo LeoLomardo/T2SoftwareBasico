@@ -1,6 +1,13 @@
+<<<<<<< Updated upstream
 /*Leo Land Bairos Lomardo - 2020201*/
 /*Lucas Daibes Rachid de Lucena - 2010796*/
 
+=======
+/*
+Leo Land Bairos Lomardo - 2020201 - 3WA
+Lucas Daibes Rachid de Lucena - 2010796   - 3WB
+*/
+>>>>>>> Stashed changes
 #include <stdio.h>
 #include <stdlib.h>
 #include "geracodigo.h"
