@@ -1,18 +1,13 @@
-<<<<<<< Updated upstream
-/*Leo Land Bairos Lomardo - 2020201*/
-/*Lucas Daibes Rachid de Lucena - 2010796*/
-
-=======
 /*
 Leo Land Bairos Lomardo - 2020201 - 3WA
 Lucas Daibes Rachid de Lucena - 2010796   - 3WB
 */
->>>>>>> Stashed changes
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "geracodigo.h"
 
-funcp geracodigo(FILE *f, unsigned char *codigo);
+funcp geraCodigo(FILE *f, unsigned char *codigo);
 static void error (const char *msg, int line);
 int escreverVet(unsigned char *codigo, int posicaoVet, unsigned char novoCod[], int tamanhoAdicional);
 int posicaoVariavel(unsigned char *codigo, int posicaoVet, int val );
@@ -46,7 +41,7 @@ typedef int (*funcp) ();
 struct If{																		
     int desvioIfJL[20];
     int destinoJL;
-    int desvioIfJE[20];																	
+    int destinoIfJE[20];																	
     int destinoJE;
 };
 struct Go{
@@ -109,19 +104,29 @@ int escreverVet(unsigned char *codigo, int posicaoVet, unsigned char novoCod[], 
     return retorno;
 }
 
-funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){	
-    struct Go desvio;
-    struct If desvio2;
+funcp geraCodigo(FILE *arquivo_entrada, unsigned char codigo[]){	
     int posicaoVet = 0;
     int c = 0;
-    int line = 1;
-    desvio.destinoGO=0;
-    desvio2.destinoJL=0;
-    desvio2.destinoJE=0;
+    int linha;
+    int a = 0;
+    int line = 1, num, num2;
+    unsigned char *pnum=(unsigned char*) & num;
+    unsigned char *pnum2=(unsigned char*) & num2;
+    
+    long int endereco[20];
+    
+    struct Go desvio;
+    struct If desvio2;
+    
+    desvio.destinoGO = 0;
+    desvio2.destinoJL = 0;
+    desvio2.destinoJE = 0;
     
     posicaoVet = escreverVet(codigo, posicaoVet, inicioCod,TAMANHO_INICIO);
 
     while ((c = fgetc(arquivo_entrada)) != EOF){
+        endereco[linha]=(long)(&codigo[posicaoVet]);
+        linha++;
         switch (c){
             case 'r':{																								
                 char var0;
@@ -474,7 +479,7 @@ funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){
                 desvio2.destinoJL++;
 
                 posicaoVet = escreverVet(codigo, posicaoVet, desvioCod_P2,TAMANHO_DESVCOND);
-                desvio2.desvioIfJE[desvio2.destinoJE] = n2;
+                desvio2.destinoIfJE[desvio2.destinoJE] = n2;
                 desvio2.destinoJE++;
 
                 printf("%d if %c%d %d %d\n", line, var0, idx0, n1, n2);
@@ -496,5 +501,53 @@ funcp geracodigo(FILE *arquivo_entrada, unsigned char codigo[]){
         line ++;
         fscanf(arquivo_entrada, " ");
     }
+        posicaoVet=0;    
+        desvio.destinoGO=0;
+
+        while(codigo[posicaoVet]!=0xC9){
+            if(codigo[posicaoVet]==0xe9){
+                posicaoVet+=5;
+                num=endereco[desvio.desvioGO[desvio.destinoGO]-1]-(long)&codigo[posicaoVet];
+                posicaoVet-=4; desvio.destinoGO++;              
+                while(a<=3){
+                    codigo[posicaoVet]=pnum[a];
+                    posicaoVet++; 
+                    a++;
+                }
+                a=0;
+            }
+            posicaoVet++;
+        }   
+        posicaoVet=0;
+        desvio2.destinoJE=0; desvio2.destinoJL=0;
+
+        while(codigo[posicaoVet]!=0xC9){
+            if(codigo[posicaoVet]==0x8C){
+                posicaoVet+=5;
+                num2=endereco[desvio2.desvioIfJL[desvio2.destinoJL]-1]-(long)&codigo[posicaoVet];
+                posicaoVet-=4;
+
+                while(a<=3){
+                    codigo[posicaoVet]=pnum2[a];
+                    posicaoVet++; 
+                    a++;
+                }
+                a=0;
+                desvio2.destinoJL++;
+            }
+            if(codigo[posicaoVet]==0x84){
+                posicaoVet+=5;
+                num2=endereco[desvio2.destinoIfJE[desvio2.destinoJE]-1]-(long)&codigo[posicaoVet];
+                posicaoVet-=4;
+                while(a<=3){
+                    codigo[posicaoVet]=pnum2[a];
+                    posicaoVet++; 
+                    a++;
+                }
+                a=0;
+                desvio2.destinoJE++;
+            } 
+            posicaoVet++;
+        }
     return (funcp)codigo;
 }

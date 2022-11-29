@@ -14,7 +14,7 @@ int main(int argc, char *argv[]){
       exit(1);
     }
     /* compila a função SB */
-    funcaoSB = geracodigo(myfp, codigo);
+    funcaoSB = geraCodigo(myfp, codigo);
 
     for(int i = 0; i <100; i++){
       printf("%02X ", codigo[i]);
