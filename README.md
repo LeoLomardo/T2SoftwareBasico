@@ -1,3 +1,4 @@
+# O mal do malandro é achar que todo mundo é otário kkkkkk
 # T2SoftwareBasico
  Trabalho 2 - Software Básico (INF1018)
 
